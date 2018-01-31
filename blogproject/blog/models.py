@@ -52,4 +52,8 @@ class Article(models.Model):
     author = models.ForeignKey(User)
 
     def __str__(self):
-        return "title:%s, author:%s, time of last modification:%s" % (self.title, self.author.username, self.modified_time)
+        return self.title
+
+    def get_absolute_url(self):
+        from django.core.urlresolvers import reverse
+        return reverse('blog:detail', kwargs={'pk': self.pk})
