@@ -57,3 +57,6 @@ class Article(models.Model):
     def get_absolute_url(self):
         from django.core.urlresolvers import reverse
         return reverse('blog:detail', kwargs={'pk': self.pk})
+    
+    class Meta:
+        ordering = ['-created_time', 'title']
