@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from .models import Article, Category
+from comments.forms import CommentForm
 import markdown, pygments
 # Create your views here.
 
@@ -20,4 +21,11 @@ def category(request, pk):
 def detail(request, pk):
     article = get_object_or_404(Article, pk=pk)
     article.text = markdown.markdown(article.text, ['extra', 'codehilite', 'toc'])
-    return render(request, 'blog/detail.html', context={'article': article})
+    form = CommentForm()
+    comment_list = article.comment_set.all()
+    context = {
+        'article':article,
+        'form':form,
+        'comment_list':comment_list
+    }
+    return render(request, 'blog/detail.html', context=context)
