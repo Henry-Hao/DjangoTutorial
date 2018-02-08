@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+import markdown,pygments
+from django.utils.html import strip_tags
 
 # Create your models here.
 '''
@@ -48,8 +50,13 @@ class Article(models.Model):
     excerpt = models.CharField(max_length=200, blank=True, null=True)
 
     category = models.ForeignKey(Category)
-    tags = models.ManyToManyField(Tag, blank=True, null=True)
+    tags = models.ManyToManyField(Tag, blank=True)
     author = models.ForeignKey(User)
+    views = models.PositiveIntegerField(default=0)
+
+    def increase_views(self):
+        self.views += 1
+        self.save(update_fields=['views'])
 
     def __str__(self):
         return self.title
@@ -58,5 +65,13 @@ class Article(models.Model):
         from django.core.urlresolvers import reverse
         return reverse('blog:detail', kwargs={'pk': self.pk})
     
+    def save(self, *args,**kwargs):
+        if not self.excerpt:
+            md = markdown.Markdown(extensions=['extra','codehilite','toc'])
+            self.excerpt = strip_tags(md.convert(self.text))[:54]
+        super(Article,self).save(*args,**kwargs)
+
+
+
     class Meta:
         ordering = ['-created_time', 'title']

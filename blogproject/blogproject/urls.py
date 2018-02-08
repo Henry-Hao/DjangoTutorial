@@ -18,6 +18,6 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'blog/', include('blog.urls')),  # path of the APP blog
+    url(r'', include('blog.urls')),  # path of the APP blog
     url(r'', include('comments.urls')),  # path of the APP comments
 ]

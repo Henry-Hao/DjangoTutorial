@@ -3,29 +3,53 @@ from django.http import HttpResponse
 from .models import Article, Category
 from comments.forms import CommentForm
 import markdown, pygments
+from django.views.generic import ListView,DetailView
+
+
 # Create your views here.
 
-def index(request):
-    articles = Article.objects.all()
-    return render(request, 'blog/index.html', context={'articles':articles})
 
-def archives(request, year, month):
-    articles = Article.objects.filter(created_time__year=year,created_time__month=month)
-    return render(request, 'blog/index.html', context={'articles':articles})
+class IndexView(ListView):
+    model = Article
+    template_name = 'blog/index.html'
+    context_object_name = 'articles'
+    paginate_by = 2
 
-def category(request, pk):
-    cate = get_object_or_404(Category, pk=pk)
-    articles = Article.objects.filter(category=cate)
-    return render(request, 'blog/index.html', context={'articles':articles})
+class CategoryView(IndexView):
+    def get_queryset(self):
+        cate = get_object_or_404(Category, pk=self.kwargs.get('pk'))
+        return super(CategoryView,self).get_queryset().filter(category=cate)
 
-def detail(request, pk):
-    article = get_object_or_404(Article, pk=pk)
-    article.text = markdown.markdown(article.text, ['extra', 'codehilite', 'toc'])
-    form = CommentForm()
-    comment_list = article.comment_set.all().order_by("-created_time")
-    context = {
-        'article':article,
-        'form':form,
-        'comment_list':comment_list
-    }
-    return render(request, 'blog/detail.html', context=context)
+class ArchivesView(IndexView):
+    def get_queryset(self):
+        year = self.kwargs.get('year')
+        month = self.kwargs.get('month')
+        return super(ArchivesView,self).get_queryset().filter(created_time__year=year, created_time__month=month)
+
+class ArticleDetailView(DetailView):
+    model = Article
+    template_name = 'blog/detail.html'
+    context_object_name = 'article'
+
+    def get(self, request, *args, **kwargs):
+        super(ArticleDetailClass, self).get(request,*args,**kwargs)
+        self.object.increase_views()
+        return response
+
+    def get_object(self, queryset=None):
+        article = super(ArticleDetailClass,self).get_object(queryset=None)
+        article.text = markdown.markdown(article.text,
+                ['extra','codehilite','toc'])
+        return article
+
+
+    def get_context_data(self, **kwargs):
+        context = super(ArticleDetailClass,self).get_context_data(**kwargs)
+        form = CommentForm()
+        comment_list = self.object.comment_set.all()
+        context.update({
+            "form":form,
+            "comment_list":comment_list
+            })
+        return context
+
